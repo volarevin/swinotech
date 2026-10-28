@@ -6,7 +6,7 @@ SwinoTech is a PHP/MySQL piggery management system for tracking pigs, sows, sale
  
 1. Start Apache and MySQL/MariaDB in Laragon.
 2. Create a database named `swinotech`.
-3. Import swinotech.db to phpMyAdmin.
+3. Import swinotech.sql to phpMyAdmin.
 4. Update database settings if needed in `includes/db.php`.
 5. Open:
 
