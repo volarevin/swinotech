@@ -1,0 +1,10 @@
+<?php
+require __DIR__.'/../includes/auth.php'; require_login(); require __DIR__.'/../includes/db.php'; $pageTitle='Sales';$search=trim($_GET['search']??'');$statement=$pdo->prepare('SELECT s.*, COUNT(si.sale_item_id) pig_count FROM sales s LEFT JOIN sale_items si ON si.sale_id=s.sale_id WHERE (:search = "" OR s.buyer_name LIKE :like_buyer OR LPAD(CASE WHEN s.sale_id >= 1031 THEN s.sale_id - 1030 ELSE s.sale_id END, 3, "0") LIKE :like_sale) GROUP BY s.sale_id ORDER BY s.sale_date DESC,s.sale_id DESC');$statement->execute(['search'=>$search,'like_buyer'=>"%{$search}%",'like_sale'=>"%{$search}%"]);$sales=$statement->fetchAll();$revenue=(float)$pdo->query("SELECT COALESCE(SUM(total_amount),0) FROM sales WHERE YEAR(sale_date)=YEAR(CURDATE()) AND MONTH(sale_date)=MONTH(CURDATE())")->fetchColumn();
+if (($_SERVER['HTTP_X_REQUESTED_WITH'] ?? '') === 'XMLHttpRequest') {
+    require __DIR__ . '/_results.php';
+    exit;
+}
+require __DIR__.'/../includes/header.php';
+?>
+<div class="page-heading"><div><p class="eyebrow">Transactions</p><h2>Sales</h2><p>Track peso revenue, buyers, and printable receipts.</p></div><?php if($role==='admin'): ?><a class="btn btn-danger primary-action" href="add.php">+ Create sale</a><?php endif; ?></div><div class="row g-3 mb-3"><div class="col-md-4"><div class="card stat-card dashboard-stat"><div class="stat-top"><span class="metric-icon metric-success"><i data-lucide="banknote" aria-hidden="true"></i></span><span class="stat-label">Sales this month</span></div><div class="stat-value">₱<?=number_format($revenue,2)?></div><div class="stat-note">From completed transactions</div></div></div></div><form class="filter-bar row g-2 mb-3" method="get" action="index.php" data-ajax-filter data-results="#sales-results"><div class="col-md-8"><input class="form-control" name="search" value="<?=e($search)?>" placeholder="Search buyer or sale ID"></div><div class="col-md-2 d-grid"><button class="btn btn-outline-secondary" type="submit"><i data-lucide="filter" aria-hidden="true"></i> Apply</button></div></form><?php require __DIR__ . '/_results.php'; ?>
+<?php require __DIR__.'/../includes/footer.php'; ?>
