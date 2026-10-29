@@ -147,12 +147,11 @@ document.querySelectorAll('[data-select-all]').forEach((selectAll) => {
   selectAll.addEventListener('change', () => {
     items().forEach((item) => { item.checked = selectAll.checked; });
   });
-  items().forEach((item) => {
-    item.addEventListener('change', () => {
-      const currentItems = [...items()];
-      selectAll.checked = currentItems.length > 0 && currentItems.every((entry) => entry.checked);
-      selectAll.indeterminate = currentItems.some((entry) => entry.checked) && !selectAll.checked;
-    });
+  document.addEventListener('change', (event) => {
+    if (!event.target.matches(`[data-select-item="${group}"]`)) return;
+    const currentItems = [...items()];
+    selectAll.checked = currentItems.length > 0 && currentItems.every((entry) => entry.checked);
+    selectAll.indeterminate = currentItems.some((entry) => entry.checked) && !selectAll.checked;
   });
 });
 
@@ -162,33 +161,58 @@ const auditChangeBefore = document.getElementById('audit-change-before');
 const auditChangeAfter = document.getElementById('audit-change-after');
 const auditChangeClose = document.getElementById('audit-change-close');
 if (auditChangeModal && auditChangeAction && auditChangeBefore && auditChangeAfter && auditChangeClose) {
-  const renderAuditValue = (container, value) => {
-    container.replaceChildren();
-    const entries = String(value || 'Not available').split(';').map((entry) => entry.trim()).filter(Boolean);
-    entries.forEach((entry) => {
+  const parseAuditValue = (value) => String(value || 'Not available')
+    .split(';')
+    .map((entry) => entry.trim())
+    .filter(Boolean)
+    .map((entry) => {
       const separator = entry.indexOf(':');
+      return {
+        label: separator > 0 ? entry.slice(0, separator).trim() : '',
+        value: separator > 0 ? entry.slice(separator + 1).trim() : entry
+      };
+    });
+  const renderAuditValue = (container, entries, changedLabels) => {
+    container.replaceChildren();
+    entries.forEach((entry) => {
       const row = document.createElement('div');
       row.className = 'audit-change-row';
-      if (separator > 0) {
+      if (entry.label) {
         const label = document.createElement('span');
-        label.textContent = entry.slice(0, separator).trim();
+        label.textContent = entry.label;
         const detail = document.createElement('strong');
-        detail.textContent = entry.slice(separator + 1).trim();
+        if (changedLabels.has(entry.label.toLowerCase())) {
+          row.classList.add('is-changed');
+          const dot = document.createElement('span');
+          dot.className = 'audit-change-dot';
+          dot.setAttribute('aria-hidden', 'true');
+          detail.append(dot, document.createTextNode(entry.value));
+        } else {
+          detail.textContent = entry.value;
+        }
         row.append(label, detail);
       } else {
-        row.textContent = entry;
+        row.textContent = entry.value;
       }
       container.appendChild(row);
     });
   };
   const closeAuditChange = () => auditChangeModal.close();
-  document.querySelectorAll('[data-change-dialog]').forEach((trigger) => {
-    trigger.addEventListener('click', () => {
-      auditChangeAction.textContent = trigger.dataset.changeAction || 'Record change';
-      renderAuditValue(auditChangeBefore, trigger.dataset.changeBefore);
-      renderAuditValue(auditChangeAfter, trigger.dataset.changeAfter);
-      auditChangeModal.showModal();
-    });
+  document.addEventListener('click', (event) => {
+    const trigger = event.target.closest('[data-change-dialog]');
+    if (!trigger) return;
+    const beforeEntries = parseAuditValue(trigger.dataset.changeBefore);
+    const afterEntries = parseAuditValue(trigger.dataset.changeAfter);
+    const beforeByLabel = new Map(beforeEntries.map((entry) => [entry.label.toLowerCase(), entry.value]));
+    const afterByLabel = new Map(afterEntries.map((entry) => [entry.label.toLowerCase(), entry.value]));
+    const changedLabels = new Set(
+      [...new Set([...beforeByLabel.keys(), ...afterByLabel.keys()])]
+        .filter((label) => label && beforeByLabel.get(label) !== afterByLabel.get(label))
+    );
+    auditChangeAction.textContent = trigger.dataset.changeAction || 'Record change';
+    renderAuditValue(auditChangeBefore, beforeEntries, changedLabels);
+    renderAuditValue(auditChangeAfter, afterEntries, changedLabels);
+    auditChangeModal.showModal();
   });
   auditChangeClose.addEventListener('click', closeAuditChange);
   auditChangeModal.addEventListener('cancel', (event) => {
@@ -453,7 +477,6 @@ function bindPigFilter() {
   const form = document.querySelector('[data-pig-filter]');
   if (!form || !document.querySelector('#pig-results') || form.dataset.ajaxBound) return;
   form.dataset.ajaxBound = 'true';
-  const statusToggle = form.querySelector('[data-pig-status-toggle]');
   let request;
   let timer;
 
@@ -483,10 +506,6 @@ function bindPigFilter() {
       currentResults.replaceWith(replacement);
       replacement.classList.add('is-entering');
       window.requestAnimationFrame(() => replacement.classList.remove('is-entering'));
-      if (statusToggle) {
-        statusToggle.textContent = url.searchParams.has('all') ? 'Active only' : 'Show all';
-        statusToggle.href = url.searchParams.has('all') ? url.pathname : `${url.pathname}?all=1`;
-      }
       window.history.replaceState({}, '', url.toString());
       if (status) status.textContent = 'Inventory updated.';
       bindPigFilter();
@@ -509,9 +528,7 @@ function bindPigFilter() {
       if (value) url.searchParams.set(key, value);
       else url.searchParams.delete(key);
     });
-    const current = new URL(window.location.href);
-    if (current.searchParams.has('all')) url.searchParams.set('all', '1');
-    else url.searchParams.delete('all');
+    if (!url.searchParams.has('status')) url.searchParams.set('status', 'active');
     return url;
   };
 
@@ -524,13 +541,7 @@ function bindPigFilter() {
     window.clearTimeout(timer);
     timer = window.setTimeout(() => update(buildUrl()), 300);
   });
-  form.querySelector('[data-pig-status-toggle]').addEventListener('click', (event) => {
-    event.preventDefault();
-    const url = buildUrl();
-    if (url.searchParams.has('all')) url.searchParams.delete('all');
-    else url.searchParams.set('all', '1');
-    update(url);
-  });
+  form.querySelector('[name="status"]').addEventListener('change', () => update(buildUrl()));
   form.addEventListener('filterchange', () => update(buildUrl()));
 }
 

@@ -8,7 +8,7 @@ $error = null;
 $categories = ['boar' => 'B', 'fattener' => 'F', 'sow' => 'S'];
 $category = $_POST['category'] ?? 'boar';
 $number = trim((string) ($_POST['tag_number'] ?? ''));
-$penNumber = trim((string) ($_POST['pen_number'] ?? ''));
+$penNumber = trim((string) ($_POST['pen_number'] ?? '1'));
 
 function next_pig_number(PDO $pdo, string $prefix): int
 {
