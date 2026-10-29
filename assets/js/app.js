@@ -141,36 +141,224 @@ if (confirmationModalElement && confirmationModalMessage && confirmationModalSub
   confirmationModalElement.addEventListener('close', () => { confirmedAction = null; });
 }
 
+const popupTimers = new WeakMap();
+const setPopupState = (popover, toggle, open) => {
+  const timer = popupTimers.get(popover);
+  if (timer) window.clearTimeout(timer);
+  toggle.setAttribute('aria-expanded', String(open));
+  if (open) {
+    popover.removeAttribute('hidden');
+    popover.classList.remove('is-closing');
+    window.requestAnimationFrame(() => popover.classList.add('is-open'));
+    return;
+  }
+  popover.classList.remove('is-open');
+  popover.classList.add('is-closing');
+  popupTimers.set(popover, window.setTimeout(() => {
+    popover.setAttribute('hidden', '');
+    popover.classList.remove('is-closing');
+  }, 220));
+};
+const closeAlertMenus = () => {
+  document.querySelectorAll('[data-alert-menu]').forEach((menu) => {
+    const toggle = menu.parentElement.querySelector('[data-alert-toggle]');
+    if (toggle) setPopupState(menu, toggle, false);
+  });
+};
+const closeCalendarPopovers = () => {
+  document.querySelectorAll('[data-calendar-popover]').forEach((popover) => {
+    const toggle = popover.parentElement.querySelector('[data-calendar-toggle]');
+    if (toggle) setPopupState(popover, toggle, false);
+  });
+};
+
 document.querySelectorAll('[data-alert-toggle]').forEach((toggle) => {
   const menu = toggle.parentElement.querySelector('[data-alert-menu]');
   if (!menu) return;
   toggle.addEventListener('click', (event) => {
     event.stopPropagation();
     const open = menu.hasAttribute('hidden');
-    menu.toggleAttribute('hidden', !open);
-    toggle.setAttribute('aria-expanded', String(open));
+    if (open) closeCalendarPopovers();
+    setPopupState(menu, toggle, open);
   });
   menu.addEventListener('click', (event) => event.stopPropagation());
 });
 
+const calendarDateKey = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+const calendarDateFromKey = (value) => {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+const calendarDateFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+const calendarMonthFormatter = new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' });
+const escapeCalendarText = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+}[character]));
+
+document.querySelectorAll('[data-calendar]').forEach((calendar) => {
+  let events = [];
+  try {
+    events = JSON.parse(calendar.dataset.calendarEvents || '[]');
+  } catch (error) {
+    console.error('Unable to load calendar reminders.', error);
+  }
+  const eventsByDate = new Map();
+  events.forEach((event) => {
+    const date = event.expected_farrowing_date;
+    if (!date) return;
+    if (!eventsByDate.has(date)) eventsByDate.set(date, []);
+    eventsByDate.get(date).push(event);
+  });
+  const popover = calendar.querySelector('[data-calendar-popover]');
+  const toggle = calendar.querySelector('[data-calendar-toggle]');
+  const grid = calendar.querySelector('[data-calendar-grid]');
+  const monthLabel = calendar.querySelector('[data-calendar-month]');
+  const title = calendar.querySelector('[data-calendar-title]');
+  const selectedDateLabel = calendar.querySelector('[data-calendar-selected-date]');
+  const eventsList = calendar.querySelector('[data-calendar-events-list]');
+  const today = new Date();
+  let monthCursor = new Date(today.getFullYear(), today.getMonth(), 1);
+  let selectedDate = calendarDateKey(today);
+
+  const render = (direction = 0) => {
+    monthLabel.textContent = calendarMonthFormatter.format(monthCursor);
+    title.textContent = 'Farrowing calendar';
+    const firstDayOffset = (monthCursor.getDay() + 6) % 7;
+    const daysInMonth = new Date(monthCursor.getFullYear(), monthCursor.getMonth() + 1, 0).getDate();
+    const totalCells = Math.ceil((firstDayOffset + daysInMonth) / 7) * 7;
+    grid.innerHTML = '';
+    grid.classList.remove('is-month-prev', 'is-month-next');
+    for (let index = 0; index < totalCells; index += 1) {
+      const date = new Date(monthCursor.getFullYear(), monthCursor.getMonth(), index - firstDayOffset + 1);
+      const key = calendarDateKey(date);
+      const dayEvents = eventsByDate.get(key) || [];
+      const day = document.createElement('button');
+      day.type = 'button';
+      day.className = 'calendar-day';
+      if (date.getMonth() !== monthCursor.getMonth()) day.classList.add('is-adjacent');
+      if (key === calendarDateKey(today)) day.classList.add('is-today');
+      if (key === selectedDate) day.classList.add('is-selected');
+      day.setAttribute('role', 'gridcell');
+      day.setAttribute('aria-label', `${calendarDateFormatter.format(date)}${dayEvents.length ? `, ${dayEvents.length} farrowing reminder${dayEvents.length === 1 ? '' : 's'}` : ''}`);
+      day.setAttribute('aria-selected', String(key === selectedDate));
+      day.dataset.calendarDate = key;
+      day.innerHTML = `<span>${date.getDate()}</span>${dayEvents.length ? '<i class="calendar-event-dot" aria-hidden="true"></i>' : ''}`;
+      grid.appendChild(day);
+    }
+    if (direction) {
+      grid.classList.add(direction < 0 ? 'is-month-prev' : 'is-month-next');
+      window.setTimeout(() => grid.classList.remove('is-month-prev', 'is-month-next'), 260);
+    }
+    const selectedDateObject = calendarDateFromKey(selectedDate);
+    selectedDateLabel.textContent = calendarDateFormatter.format(selectedDateObject);
+    const selectedEvents = eventsByDate.get(selectedDate) || [];
+    eventsList.innerHTML = selectedEvents.length
+      ? selectedEvents.map((event) => `<a class="calendar-event-item" href="${escapeCalendarText(event.edit_href)}"><i data-lucide="heart-pulse" aria-hidden="true"></i><span><strong>Farrowing reminder</strong><small>Sow ${escapeCalendarText(event.tag_number)} · Expected ${escapeCalendarText(calendarDateFormatter.format(calendarDateFromKey(event.expected_farrowing_date)))}</small></span></a>`).join('')
+      : '<p class="calendar-empty">No farrowing reminders for this day.</p>';
+    if (window.lucide) window.lucide.createIcons();
+  };
+
+  const setOpen = (open) => {
+    setPopupState(popover, toggle, open);
+    if (open) render();
+  };
+
+  toggle.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const open = popover.hasAttribute('hidden');
+    if (open) closeAlertMenus();
+    setOpen(open);
+  });
+  popover.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const day = event.target.closest('[data-calendar-date]');
+    if (day) {
+      selectedDate = day.dataset.calendarDate;
+      const date = calendarDateFromKey(selectedDate);
+      monthCursor = new Date(date.getFullYear(), date.getMonth(), 1);
+      render();
+    }
+    if (event.target.closest('[data-calendar-close]')) setOpen(false);
+    if (event.target.closest('[data-calendar-prev]')) {
+      monthCursor.setMonth(monthCursor.getMonth() - 1);
+      render(-1);
+    }
+    if (event.target.closest('[data-calendar-next]')) {
+      monthCursor.setMonth(monthCursor.getMonth() + 1);
+      render(1);
+    }
+  });
+  render();
+});
+
 document.addEventListener('click', () => {
-  document.querySelectorAll('[data-alert-menu]').forEach((menu) => {
-    menu.setAttribute('hidden', '');
-    const toggle = menu.parentElement.querySelector('[data-alert-toggle]');
+  closeAlertMenus();
+  closeCalendarPopovers();
+  document.querySelectorAll('[data-filter-select] .filter-select-menu.is-open').forEach((menu) => {
+    menu.classList.remove('is-open');
+    window.setTimeout(() => menu.setAttribute('hidden', ''), 180);
+    const toggle = menu.parentElement.querySelector('[data-filter-select-toggle]');
     if (toggle) toggle.setAttribute('aria-expanded', 'false');
   });
 });
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
-  document.querySelectorAll('[data-alert-menu]').forEach((menu) => {
-    menu.setAttribute('hidden', '');
-    const toggle = menu.parentElement.querySelector('[data-alert-toggle]');
-    if (toggle) {
-      toggle.setAttribute('aria-expanded', 'false');
-      toggle.focus();
+  closeAlertMenus();
+  document.querySelectorAll('[data-calendar-popover]').forEach((popover) => {
+    if (!popover.hasAttribute('hidden')) {
+      const toggle = popover.parentElement.querySelector('[data-calendar-toggle]');
+      if (toggle) setPopupState(popover, toggle, false);
+      if (toggle) toggle.focus();
     }
   });
 });
+
+function bindFilterSelects() {
+  document.querySelectorAll('[data-filter-select]').forEach((select) => {
+    if (select.dataset.bound) return;
+    select.dataset.bound = 'true';
+    const toggle = select.querySelector('[data-filter-select-toggle]');
+    const menu = select.querySelector('.filter-select-menu');
+    const input = select.querySelector('input[type="hidden"]');
+    if (!toggle || !menu || !input) return;
+    let closeTimer;
+    const close = () => {
+      window.clearTimeout(closeTimer);
+      menu.classList.remove('is-open');
+      closeTimer = window.setTimeout(() => menu.setAttribute('hidden', ''), 180);
+      toggle.setAttribute('aria-expanded', 'false');
+    };
+    const open = () => {
+      window.clearTimeout(closeTimer);
+      menu.removeAttribute('hidden');
+      window.requestAnimationFrame(() => menu.classList.add('is-open'));
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+    toggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (menu.hasAttribute('hidden')) open();
+      else close();
+    });
+    menu.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const option = event.target.closest('[data-filter-option]');
+      if (!option) return;
+      input.value = option.dataset.filterOption || '';
+      toggle.firstChild.textContent = option.textContent;
+      menu.querySelectorAll('[data-filter-option]').forEach((item) => item.setAttribute('aria-selected', String(item === option)));
+      close();
+      select.closest('form')?.dispatchEvent(new Event('filterchange', { bubbles: true }));
+    });
+    select.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') close();
+    });
+  });
+}
 
 async function refreshFilteredList(form, url) {
   const target = document.querySelector('.table-shell');
@@ -218,6 +406,7 @@ function bindPigFilter() {
     const currentResults = document.querySelector('#pig-results');
     if (!currentResults) return;
     currentResults.setAttribute('aria-busy', 'true');
+    currentResults.classList.add('is-updating');
     form.classList.add('is-loading');
     const status = form.querySelector('[data-pig-filter-status]');
     if (status) status.textContent = 'Updating inventory…';
@@ -233,7 +422,10 @@ function bindPigFilter() {
         window.location.assign(url.toString());
         return;
       }
+      replacement.style.minHeight = `${currentResults.offsetHeight}px`;
       currentResults.replaceWith(replacement);
+      replacement.classList.add('is-entering');
+      window.requestAnimationFrame(() => replacement.classList.remove('is-entering'));
       if (statusToggle) {
         statusToggle.textContent = url.searchParams.has('all') ? 'Active only' : 'Show all';
         statusToggle.href = url.searchParams.has('all') ? url.pathname : `${url.pathname}?all=1`;
@@ -245,7 +437,7 @@ function bindPigFilter() {
     } catch (error) {
       if (error.name !== 'AbortError') {
         console.error(error);
-        if (status) status.textContent = 'Unable to update inventory. Try Apply again.';
+        if (status) status.textContent = 'Unable to update inventory. Try again.';
       }
     } finally {
       form.classList.remove('is-loading');
@@ -282,6 +474,7 @@ function bindPigFilter() {
     else url.searchParams.set('all', '1');
     update(url);
   });
+  form.addEventListener('filterchange', () => update(buildUrl()));
 }
 
 function bindAjaxFilters() {
@@ -305,6 +498,7 @@ function bindAjaxFilters() {
       const target = document.querySelector(targetSelector);
       if (!target) return;
       target.setAttribute('aria-busy', 'true');
+      target.classList.add('is-updating');
       form.classList.add('is-loading');
       fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: request.signal })
         .then((response) => {
@@ -315,7 +509,10 @@ function bindAjaxFilters() {
           const parsed = new DOMParser().parseFromString(html, 'text/html');
           const replacement = parsed.querySelector(targetSelector);
           if (!replacement) throw new Error('Filtered results were not returned.');
+          replacement.style.minHeight = `${target.offsetHeight}px`;
+          replacement.classList.add('is-entering');
           target.replaceWith(replacement);
+          window.requestAnimationFrame(() => replacement.classList.remove('is-entering'));
           window.history.replaceState({}, '', url.toString());
           bindAjaxFilters();
           if (window.lucide) window.lucide.createIcons();
@@ -323,9 +520,16 @@ function bindAjaxFilters() {
         .catch((error) => {
           if (error.name !== 'AbortError') console.error(error);
           const currentTarget = document.querySelector(targetSelector);
-          if (currentTarget) currentTarget.setAttribute('aria-busy', 'false');
+          if (currentTarget) {
+            currentTarget.setAttribute('aria-busy', 'false');
+            currentTarget.classList.remove('is-updating');
+          }
         })
-        .finally(() => form.classList.remove('is-loading'));
+        .finally(() => {
+          form.classList.remove('is-loading');
+          const currentTarget = document.querySelector(targetSelector);
+          if (currentTarget) currentTarget.setAttribute('aria-busy', 'false');
+        });
     };
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -336,12 +540,11 @@ function bindAjaxFilters() {
       window.clearTimeout(timer);
       timer = window.setTimeout(() => update(buildUrl()), 300);
     });
-    form.querySelectorAll('select').forEach((select) => {
-      select.addEventListener('change', () => update(buildUrl()));
-    });
+    form.addEventListener('filterchange', () => update(buildUrl()));
   });
 }
 
+bindFilterSelects();
 bindPigFilter();
 bindAjaxFilters();
 

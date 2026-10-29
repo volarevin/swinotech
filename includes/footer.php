@@ -17,6 +17,16 @@
 <div class="offcanvas offcanvas-start mobile-nav" tabindex="-1" id="mobileNav">
     <div class="offcanvas-header"><strong class="brand-title">SwinoTech</strong><button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button></div>
     <div class="offcanvas-body">
+        <div class="calendar-control calendar-control-mobile" data-calendar data-calendar-events="<?= e(json_encode($calendarEvents, JSON_UNESCAPED_SLASHES)) ?>">
+            <button class="mobile-calendar-trigger" type="button" aria-expanded="false" aria-controls="mobile-calendar" data-calendar-toggle><i data-lucide="calendar-days" aria-hidden="true"></i><span>Farm calendar</span></button>
+            <div class="calendar-popover" id="mobile-calendar" data-calendar-popover hidden>
+                <div class="calendar-head"><div><div class="eyebrow">Farm reminders</div><h2 data-calendar-title></h2></div><button class="icon-button calendar-close" type="button" aria-label="Close calendar" data-calendar-close><i data-lucide="x" aria-hidden="true"></i></button></div>
+                <div class="calendar-month-controls"><button class="icon-button" type="button" aria-label="Previous month" data-calendar-prev><i data-lucide="chevron-left" aria-hidden="true"></i></button><strong data-calendar-month></strong><button class="icon-button" type="button" aria-label="Next month" data-calendar-next><i data-lucide="chevron-right" aria-hidden="true"></i></button></div>
+                <div class="calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+                <div class="calendar-grid" role="grid" aria-label="Calendar days" data-calendar-grid></div>
+                <section class="calendar-day-details" aria-live="polite"><div class="calendar-day-heading"><i data-lucide="calendar-check-2" aria-hidden="true"></i><strong data-calendar-selected-date></strong></div><div data-calendar-events-list></div></section>
+            </div>
+        </div>
         <?php foreach ($nav as $item): ?><?php $active = $item['section'] === 'dashboard' ? $isDashboard : $currentSection === $item['section']; ?><a href="<?= BASE_URL . '/' . $item['href'] ?>" class="mobile-nav-link<?= $active ? ' active' : '' ?>" <?= $active ? 'aria-current="page"' : '' ?>><i data-lucide="<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a><?php endforeach; ?>
         <?php if ($role === 'admin'): ?><?php $settingsActive = $currentSection === 'settings'; ?><a href="<?= BASE_URL ?>/settings/index.php" class="mobile-nav-link<?= $settingsActive ? ' active' : '' ?>" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i data-lucide="settings" aria-hidden="true"></i>Settings</a><?php endif; ?>
     </div>

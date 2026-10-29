@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 require __DIR__ . '/../includes/header.php';
 ?>
-<div class="page-heading"><div><p class="eyebrow">Herd register</p><h2>Add pig</h2><p>Choose a category and enter only the numeric part of the tag. Leave it blank to generate the next number automatically.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to pig inventory" title="Back to pig inventory"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Herd register</p><h2>Add pig</h2><p>Choose a category and enter only the numeric part of the tag. Leave it blank to generate the next number automatically.</p></div></div>
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= e($error) ?></div><?php endif; ?>
 <div class="card"><form method="post" class="row g-3">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
@@ -80,7 +80,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="col-md-6"><label class="form-label">Weight (kg)<input class="form-control" type="number" step=".01" min="0" name="weight" required value="<?= e($_POST['weight'] ?? '') ?>"></label></div>
     <div class="col-md-6"><label class="form-label">Pen number <span class="text-danger">*</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]+" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', $penNumber)) ?>" required></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Status<select class="form-select" name="status"><option>active</option><option>sold</option><option>dead</option></select></label></div>
-    <div class="col-12"><button class="btn btn-danger">Save pig</button> <a class="btn btn-light" href="index.php">Cancel</a></div>
+    <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save pig</button></div>
 </form></div>
 <script>
 (() => {

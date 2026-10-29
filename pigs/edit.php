@@ -61,7 +61,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 require __DIR__ . '/../includes/header.php';
 ?>
-<div class="page-heading"><div><p class="eyebrow">Herd register</p><h2>Edit <?= e($pig['tag_number']) ?></h2><p>The tag prefix follows the selected category automatically.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to pig inventory" title="Back to pig inventory"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Herd register</p><h2>Edit <?= e($pig['tag_number']) ?></h2><p>The tag prefix follows the selected category automatically.</p></div></div>
 <?php if ($error): ?><div class="alert alert-danger"><?= e($error) ?></div><?php endif; ?>
 <div class="card"><form method="post" class="row g-3">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="pig_id" value="<?= $id ?>">
@@ -70,7 +70,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="col-md-6"><label class="form-label">Weight (kg)<input class="form-control" type="number" step=".01" min="0" name="weight" required value="<?= e($pig['weight']) ?>"></label></div>
     <div class="col-md-6"><label class="form-label">Pen number <span class="text-danger">*</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]+" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', (string) ($pig['pen_number'] ?? ''))) ?>" required></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Status<select class="form-select" name="status"><?php foreach (['active', 'sold', 'dead'] as $item): ?><option <?= $pig['status'] === $item ? 'selected' : '' ?>><?= $item ?></option><?php endforeach; ?></select></label></div>
-    <div class="col-12"><button class="btn btn-danger primary-action">Save changes</button> <a class="btn btn-light" href="index.php">Cancel</a></div>
+    <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
 </form></div>
 <script>
 const categoryInput = document.getElementById('pig-category');

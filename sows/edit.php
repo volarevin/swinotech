@@ -27,14 +27,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 require __DIR__ . '/../includes/header.php';
 ?>
-<div class="page-heading"><div><p class="eyebrow">Breeding operations</p><h2>Edit <?= e($record['tag_number']) ?></h2><p>Update the mating date or record the outcome of this breeding cycle.</p></div></div>
+<div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to sow tracker" title="Back to sow tracker"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Breeding operations</p><h2>Edit <?= e($record['tag_number']) ?></h2><p>Update the mating date or record the outcome of this breeding cycle.</p></div></div>
 <div class="card mb-3">
     <h3 class="section-title">Mating details</h3>
     <form method="post" class="row g-3">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="sow_record_id" value="<?= $id ?>">
         <div class="col-md-6"><label class="form-label">Mating date<input class="form-control" type="date" name="mating_date" value="<?= e($record['mating_date']) ?>" required></label></div>
-        <div class="col-12"><button class="btn btn-danger primary-action">Save changes</button> <a class="btn btn-light" href="index.php">Cancel</a></div>
+        <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
     </form>
 </div>
 <?php if ($record['status'] === 'pregnant'): ?>
@@ -46,7 +46,7 @@ require __DIR__ . '/../includes/header.php';
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="sow_record_id" value="<?= $id ?>">
             <input type="hidden" name="new_status" value="farrowed">
-            <div><label class="form-label" for="piglets-born">Piglets born</label><input class="form-control" id="piglets-born" type="number" name="piglets_born" min="0" step="1" required value="<?= (int) $record['piglets_born'] ?>"></div>
+            <div><label class="form-label" for="piglets-born">Piglets born</label><input class="form-control" id="piglets-born" type="number" name="piglets_born" min="1" step="1" required value=""></div>
             <button class="btn btn-success primary-action" id="farrowed-button" type="submit" disabled>Farrowed</button>
         </form>
         <form method="post" action="update-status.php">
@@ -64,7 +64,9 @@ require __DIR__ . '/../includes/header.php';
 const pigletsInput = document.getElementById('piglets-born');
 const farrowedButton = document.getElementById('farrowed-button');
 const updateFarrowedState = () => {
-    farrowedButton.disabled = pigletsInput.value.trim() === '' || !Number.isInteger(Number(pigletsInput.value)) || Number(pigletsInput.value) < 0;
+    const value = pigletsInput.value.trim();
+    const count = Number(value);
+    farrowedButton.disabled = value === '' || !Number.isInteger(count) || count < 1;
 };
 pigletsInput.addEventListener('input', updateFarrowedState);
 updateFarrowedState();

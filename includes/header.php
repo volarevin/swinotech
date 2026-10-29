@@ -20,9 +20,18 @@ if ($basePath !== '' && str_starts_with($currentPath, $basePath . '/')) {
 $currentSection = str_contains($currentPath, '/') ? strstr($currentPath, '/', true) : $currentPath;
 $isDashboard = basename($currentPath) === 'dashboard.php';
 $headerAlerts = [];
+$calendarEvents = [];
 if (isset($pdo)) {
     require_once __DIR__ . '/dashboard-data.php';
     $headerAlerts = dashboard_notifications($pdo, dashboard_profile($pdo));
+    $calendarEvents = $pdo->query("SELECT s.sow_record_id, p.tag_number, s.expected_farrowing_date
+        FROM sow_records s JOIN pigs p ON p.pig_id = s.pig_id
+        WHERE s.status = 'pregnant' AND s.expected_farrowing_date IS NOT NULL
+        ORDER BY s.expected_farrowing_date, p.tag_number")->fetchAll();
+    foreach ($calendarEvents as &$calendarEvent) {
+        $calendarEvent['edit_href'] = BASE_URL . '/sows/edit.php?id=' . (int) $calendarEvent['sow_record_id'];
+    }
+    unset($calendarEvent);
 }
 ?>
 <!doctype html>
@@ -78,6 +87,16 @@ if (isset($pdo)) {
             <button class="mobile-menu" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileNav" aria-label="Open navigation">☰</button>
             <div class="flex-grow-1"><div class="eyebrow">SwinoTech farm operations</div><h1><?= e($pageTitle) ?></h1></div>
             <div class="topbar-date"><?= date('M d, Y') ?></div>
+            <div class="calendar-control" data-calendar data-calendar-events="<?= e(json_encode($calendarEvents, JSON_UNESCAPED_SLASHES)) ?>">
+                <button class="icon-button calendar-toggle" type="button" aria-label="Open calendar" aria-expanded="false" aria-controls="topbar-calendar" data-calendar-toggle><i data-lucide="calendar-days" aria-hidden="true"></i></button>
+                <div class="calendar-popover" id="topbar-calendar" data-calendar-popover hidden>
+                    <div class="calendar-head"><div><div class="eyebrow">Farm reminders</div><h2 data-calendar-title></h2></div><button class="icon-button calendar-close" type="button" aria-label="Close calendar" data-calendar-close><i data-lucide="x" aria-hidden="true"></i></button></div>
+                    <div class="calendar-month-controls"><button class="icon-button" type="button" aria-label="Previous month" data-calendar-prev><i data-lucide="chevron-left" aria-hidden="true"></i></button><strong data-calendar-month></strong><button class="icon-button" type="button" aria-label="Next month" data-calendar-next><i data-lucide="chevron-right" aria-hidden="true"></i></button></div>
+                    <div class="calendar-weekdays" aria-hidden="true"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+                    <div class="calendar-grid" role="grid" aria-label="Calendar days" data-calendar-grid></div>
+                    <section class="calendar-day-details" aria-live="polite"><div class="calendar-day-heading"><i data-lucide="calendar-check-2" aria-hidden="true"></i><strong data-calendar-selected-date></strong></div><div data-calendar-events-list></div></section>
+                </div>
+            </div>
             <div class="alerts-control"><button class="icon-button" type="button" aria-label="Open alerts" aria-expanded="false" data-alert-toggle><i data-lucide="bell" aria-hidden="true"></i><?php if ($headerAlerts): ?><span class="alert-count"><?= count($headerAlerts) ?></span><?php endif; ?></button><div class="alerts-dropdown" data-alert-menu hidden><div class="alerts-dropdown-head"><strong>Alerts</strong><span><?= count($headerAlerts) ?> active</span></div><?php if (!$headerAlerts): ?><p class="empty-state">Everything is under control.</p><?php else: foreach (array_slice($headerAlerts, 0, 5) as $alert): ?><a href="<?= BASE_URL . '/' . e($alert['href']) ?>" class="alert-menu-item"><i data-lucide="<?= e($alert['icon']) ?>" aria-hidden="true"></i><span><strong><?= e($alert['title']) ?></strong><small><?= e($alert['meta']) ?></small></span></a><?php endforeach; endif; ?></div></div>
             <button class="theme-toggle icon-button" type="button" aria-label="Toggle dark mode" aria-pressed="false" data-theme-toggle><i data-lucide="moon" aria-hidden="true"></i><span class="visually-hidden" data-theme-label>Enable dark mode</span></button>
             <a class="icon-button" href="<?= BASE_URL ?>/logout.php" aria-label="Logout"><i data-lucide="log-out" aria-hidden="true"></i></a>
