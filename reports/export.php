@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/../includes/auth.php';
-require_login();
+require_role('admin');
 require __DIR__ . '/../includes/db.php';
 
 $type = $_GET['type'] ?? 'sales';

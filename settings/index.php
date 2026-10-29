@@ -97,27 +97,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'farm_name' => trim((string) ($_POST['farm_name'] ?? '')),
             'owner_name' => trim((string) ($_POST['owner_name'] ?? '')),
             'location' => trim((string) ($_POST['location'] ?? '')),
-            'currency' => strtoupper(trim((string) ($_POST['currency'] ?? ''))),
             'heat_threshold' => trim((string) ($_POST['heat_threshold'] ?? '')),
             'due_soon_days' => trim((string) ($_POST['due_soon_days'] ?? '')),
         ];
 
         if ($profile['farm_name'] === '' || $profile['owner_name'] === '' || $profile['location'] === '') {
             $profileError = 'Farm name, owner name, and location are required.';
-        } elseif (!preg_match('/^[A-Z]{3}$/', $profile['currency'])) {
-            $profileError = 'Currency must be a three-letter code, such as PHP.';
         } elseif (!is_numeric($profile['heat_threshold']) || (float) $profile['heat_threshold'] < 0 || (float) $profile['heat_threshold'] > 100) {
             $profileError = 'Heat threshold must be between 0 and 100°C.';
         } elseif (filter_var($profile['due_soon_days'], FILTER_VALIDATE_INT) === false || (int) $profile['due_soon_days'] < 1 || (int) $profile['due_soon_days'] > 30) {
             $profileError = 'Due-soon days must be a whole number between 1 and 30.';
         } else {
             try {
-                $statement = $pdo->prepare('INSERT INTO farm_profile (profile_id, farm_name, owner_name, location, currency, heat_threshold, due_soon_days) VALUES (1, :farm_name, :owner_name, :location, :currency, :heat_threshold, :due_soon_days) ON DUPLICATE KEY UPDATE farm_name = VALUES(farm_name), owner_name = VALUES(owner_name), location = VALUES(location), currency = VALUES(currency), heat_threshold = VALUES(heat_threshold), due_soon_days = VALUES(due_soon_days)');
+                $statement = $pdo->prepare('INSERT INTO farm_profile (profile_id, farm_name, owner_name, location, heat_threshold, due_soon_days) VALUES (1, :farm_name, :owner_name, :location, :heat_threshold, :due_soon_days) ON DUPLICATE KEY UPDATE farm_name = VALUES(farm_name), owner_name = VALUES(owner_name), location = VALUES(location), heat_threshold = VALUES(heat_threshold), due_soon_days = VALUES(due_soon_days)');
                 $statement->execute([
                     'farm_name' => $profile['farm_name'],
                     'owner_name' => $profile['owner_name'],
                     'location' => $profile['location'],
-                    'currency' => $profile['currency'],
                     'heat_threshold' => (float) $profile['heat_threshold'],
                     'due_soon_days' => (int) $profile['due_soon_days'],
                 ]);
@@ -150,9 +146,8 @@ require __DIR__ . '/../includes/header.php';
                 <div class="col-12"><label class="form-label">Farm name<input class="form-control" name="farm_name" required value="<?= e($profile['farm_name']) ?>"></label></div>
                 <div class="col-md-6"><label class="form-label">Owner name<input class="form-control" name="owner_name" required value="<?= e($profile['owner_name']) ?>"></label></div>
                 <div class="col-md-6"><label class="form-label">Location<input class="form-control" name="location" required value="<?= e($profile['location']) ?>"></label></div>
-                <div class="col-md-4"><label class="form-label">Currency<input class="form-control" name="currency" maxlength="3" pattern="[A-Za-z]{3}" required value="<?= e($profile['currency']) ?>"></label></div>
-                <div class="col-md-4"><label class="form-label">Heat threshold (°C)<input class="form-control" type="number" name="heat_threshold" min="0" max="100" step=".01" required value="<?= e($profile['heat_threshold']) ?>"></label></div>
-                <div class="col-md-4"><label class="form-label">Due soon (days)<input class="form-control" type="number" name="due_soon_days" min="1" max="30" step="1" required value="<?= e($profile['due_soon_days']) ?>"></label></div>
+                <div class="col-md-6"><label class="form-label">Heat threshold (°C)<input class="form-control" type="number" name="heat_threshold" min="0" max="100" step=".01" required value="<?= e($profile['heat_threshold']) ?>"></label></div>
+                <div class="col-md-6"><label class="form-label">Due soon (days)<input class="form-control" type="number" name="due_soon_days" min="1" max="30" step="1" required value="<?= e($profile['due_soon_days']) ?>"></label></div>
                 <div class="col-12 settings-actions"><button class="btn btn-danger primary-action">Save changes</button></div>
             </form>
         </div>

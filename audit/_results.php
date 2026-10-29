@@ -1,0 +1,10 @@
+<div class="module-intro-card audit-key"><span class="module-intro-icon"><i data-lucide="route" aria-hidden="true"></i></span><div><strong>Change history</strong><span>Updates show the previous and resulting values when available.</span></div></div>
+<div class="card table-responsive">
+    <table class="table align-middle mb-0">
+        <thead><tr><th><span class="visually-hidden">Select</span></th><th>When</th><th>Actor</th><th>Role</th><th>Action</th><th>Change</th></tr></thead>
+        <tbody>
+        <?php if (!$logs): ?><tr><td colspan="6" class="text-center text-muted py-4">No audit entries found.</td></tr>
+        <?php else: foreach ($logs as $log): ?><tr><td><input type="checkbox" name="log_ids[]" value="<?= (int) $log['log_id'] ?>" data-select-item="audit-log" aria-label="Select audit log <?= (int) $log['log_id'] ?>"></td><td><span class="muted-with-icon"><i data-lucide="clock-3" aria-hidden="true"></i><?= e(date('M d, Y g:i A', strtotime($log['created_at']))) ?></span></td><td><div class="identity-cell"><span class="table-icon"><i data-lucide="user-round" aria-hidden="true"></i></span><strong><?= e($log['username']) ?></strong></div></td><td><span class="role-badge role-<?= e($log['role']) ?>"><i data-lucide="<?= $log['role'] === 'admin' ? 'shield-check' : 'user-round' ?>" aria-hidden="true"></i><?= e(ucfirst($log['role'])) ?></span></td><td><?= e($log['action_description']) ?></td><td><?php if ($log['before_value'] !== null || $log['after_value'] !== null): ?><button class="btn btn-sm btn-outline-secondary change-button" type="button" data-change-dialog data-change-action="<?= e($log['action_description']) ?>" data-change-before="<?= e($log['before_value'] ?? 'Not available') ?>" data-change-after="<?= e($log['after_value'] ?? 'Not available') ?>"><i data-lucide="git-compare-arrows" aria-hidden="true"></i>View change</button><?php else: ?><span class="not-applicable"><i data-lucide="minus-circle" aria-hidden="true"></i>Not applicable</span><?php endif; ?></td></tr><?php endforeach; endif; ?>
+        </tbody>
+    </table>
+</div>

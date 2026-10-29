@@ -8,10 +8,12 @@ $nav = [
     ['label' => 'Dashboard', 'href' => 'dashboard.php', 'icon' => 'layout-dashboard', 'section' => 'dashboard'],
     ['label' => 'Pig Inventory', 'href' => 'pigs/index.php', 'icon' => 'piggy-bank', 'section' => 'pigs'],
     ['label' => 'Sow Tracker', 'href' => 'sows/index.php', 'icon' => 'heart-pulse', 'section' => 'sows'],
-    ['label' => 'Sales', 'href' => 'sales/index.php', 'icon' => 'receipt-text', 'section' => 'sales'],
     ['label' => 'Monitoring', 'href' => 'monitoring/index.php', 'icon' => 'activity', 'section' => 'monitoring'],
-    ['label' => 'Reports', 'href' => 'reports/index.php', 'icon' => 'chart-no-axes-combined', 'section' => 'reports'],
 ];
+if ($role === 'admin') {
+    $nav[] = ['label' => 'Sales', 'href' => 'sales/index.php', 'icon' => 'receipt-text', 'section' => 'sales'];
+    $nav[] = ['label' => 'Reports', 'href' => 'reports/index.php', 'icon' => 'chart-no-axes-combined', 'section' => 'reports'];
+}
 $currentPath = trim(parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?: '', '/');
 $basePath = trim(BASE_URL, '/');
 if ($basePath !== '' && str_starts_with($currentPath, $basePath . '/')) {
@@ -23,7 +25,7 @@ $headerAlerts = [];
 $calendarEvents = [];
 if (isset($pdo)) {
     require_once __DIR__ . '/dashboard-data.php';
-    $headerAlerts = dashboard_notifications($pdo, dashboard_profile($pdo));
+    $headerAlerts = dashboard_notifications($pdo, dashboard_profile($pdo), $role);
     $calendarEvents = $pdo->query("SELECT s.sow_record_id, p.tag_number, s.expected_farrowing_date
         FROM sow_records s JOIN pigs p ON p.pig_id = s.pig_id
         WHERE s.status = 'pregnant' AND s.expected_farrowing_date IS NOT NULL
@@ -72,6 +74,10 @@ if (isset($pdo)) {
             <?php if ($role === 'admin'): ?>
                 <?php $settingsActive = $currentSection === 'settings'; ?>
                 <a class="<?= $settingsActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/settings/index.php" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="settings" aria-hidden="true"></i><span>Settings</span></a>
+                <?php $usersActive = $currentSection === 'users'; ?>
+                <a class="<?= $usersActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/users/index.php" <?= $usersActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="users" aria-hidden="true"></i><span>Users</span></a>
+                <?php $auditActive = $currentSection === 'audit'; ?>
+                <a class="<?= $auditActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/audit/index.php" <?= $auditActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="scroll-text" aria-hidden="true"></i><span>Audit Logs</span></a>
             <?php endif; ?>
         </nav>
         <div class="sidebar-user">

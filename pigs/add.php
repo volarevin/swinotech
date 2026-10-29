@@ -57,6 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'pen' => $penNumber === '' ? null : 'Pen ' . (int) $penDigits,
             'status' => $_POST['status'] ?? 'active',
         ]);
+        require __DIR__ . '/../includes/audit.php';
+        audit_log($pdo, "Added pig {$tag} ({$category})");
         flash('success', 'Pig ' . $tag . ' added to the herd register.');
         redirect('pigs/index.php');
     } catch (InvalidArgumentException $exception) {
@@ -75,11 +77,11 @@ require __DIR__ . '/../includes/header.php';
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= e($error) ?></div><?php endif; ?>
 <div class="card"><form method="post" class="row g-3">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-    <div class="col-md-6"><label class="form-label">Category<select class="form-select" name="category" id="pig-category" required><?php foreach ($categories as $value => $prefix): ?><option value="<?= e($value) ?>" <?= $category === $value ? 'selected' : '' ?>><?= e(ucfirst($value)) ?> (<?= $prefix ?>)</option><?php endforeach; ?></select></label></div>
+    <div class="col-md-6"><label class="form-label">Category</label><div class="filter-select compact-form-select" data-filter-select><input type="hidden" name="category" id="pig-category" value="<?= e($category) ?>"><button class="filter-select-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="pig-category-options" data-filter-select-toggle><?= e(ucfirst($category)) ?><i data-lucide="chevron-down" aria-hidden="true"></i></button><div class="filter-select-menu" id="pig-category-options" role="listbox" hidden><?php foreach ($categories as $value => $prefix): ?><button type="button" role="option" aria-selected="<?= $category === $value ? 'true' : 'false' ?>" data-filter-option="<?= e($value) ?>"><?= e(ucfirst($value)) ?> (<?= $prefix ?>)</button><?php endforeach; ?></div></div></div>
     <div class="col-md-6"><label class="form-label">Tag number <span class="text-muted fw-normal">(optional)</span><div class="input-group"><span class="input-group-text" id="tag-prefix">B-</span><input class="form-control" name="tag_number" id="tag-number" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Auto" value="<?= e($number) ?>"></div><div class="form-text">Example: enter <strong>12</strong> to create <strong id="tag-preview">B-012</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Weight (kg)<input class="form-control" type="number" step=".01" min="0" name="weight" required value="<?= e($_POST['weight'] ?? '') ?>"></label></div>
     <div class="col-md-6"><label class="form-label">Pen number <span class="text-danger">*</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]+" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', $penNumber)) ?>" required></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
-    <div class="col-md-6"><label class="form-label">Status<select class="form-select" name="status"><option>active</option><option>sold</option><option>dead</option></select></label></div>
+    <div class="col-md-6"><label class="form-label">Status</label><div class="filter-select compact-form-select" data-filter-select><input type="hidden" name="status" value="<?= e($_POST['status'] ?? 'active') ?>"><button class="filter-select-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" aria-controls="pig-status-options" data-filter-select-toggle><?= e(ucfirst($_POST['status'] ?? 'active')) ?><i data-lucide="chevron-down" aria-hidden="true"></i></button><div class="filter-select-menu" id="pig-status-options" role="listbox" hidden><?php foreach (['active', 'sold', 'dead'] as $status): ?><button type="button" role="option" aria-selected="<?= ($_POST['status'] ?? 'active') === $status ? 'true' : 'false' ?>" data-filter-option="<?= $status ?>"><?= ucfirst($status) ?></button><?php endforeach; ?></div></div></div>
     <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save pig</button></div>
 </form></div>
 <script>

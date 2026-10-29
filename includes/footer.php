@@ -14,6 +14,21 @@
         </div>
     </div>
 </dialog>
+<dialog class="confirmation-dialog audit-change-modal" id="audit-change-modal" aria-labelledby="audit-change-title">
+    <div class="confirmation-dialog-card">
+        <div class="confirmation-dialog-icon audit-change-icon" aria-hidden="true"><i data-lucide="git-compare-arrows"></i></div>
+        <div class="confirmation-dialog-copy">
+            <h2 id="audit-change-title">Change details</h2>
+            <p id="audit-change-action"></p>
+        </div>
+        <div class="audit-change-values">
+            <div><span class="audit-change-label">Before</span><div class="audit-change-list" id="audit-change-before"></div></div>
+            <i data-lucide="arrow-right" aria-hidden="true"></i>
+            <div><span class="audit-change-label">After</span><div class="audit-change-list" id="audit-change-after"></div></div>
+        </div>
+        <div class="confirmation-dialog-actions"><button type="button" class="btn btn-light" id="audit-change-close">Close</button></div>
+    </div>
+</dialog>
 <div class="offcanvas offcanvas-start mobile-nav" tabindex="-1" id="mobileNav">
     <div class="offcanvas-header"><strong class="brand-title">SwinoTech</strong><button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button></div>
     <div class="offcanvas-body">
@@ -28,7 +43,11 @@
             </div>
         </div>
         <?php foreach ($nav as $item): ?><?php $active = $item['section'] === 'dashboard' ? $isDashboard : $currentSection === $item['section']; ?><a href="<?= BASE_URL . '/' . $item['href'] ?>" class="mobile-nav-link<?= $active ? ' active' : '' ?>" <?= $active ? 'aria-current="page"' : '' ?>><i data-lucide="<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?></a><?php endforeach; ?>
-        <?php if ($role === 'admin'): ?><?php $settingsActive = $currentSection === 'settings'; ?><a href="<?= BASE_URL ?>/settings/index.php" class="mobile-nav-link<?= $settingsActive ? ' active' : '' ?>" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i data-lucide="settings" aria-hidden="true"></i>Settings</a><?php endif; ?>
+        <?php if ($role === 'admin'): ?>
+            <?php $settingsActive = $currentSection === 'settings'; ?><a href="<?= BASE_URL ?>/settings/index.php" class="mobile-nav-link<?= $settingsActive ? ' active' : '' ?>" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i data-lucide="settings" aria-hidden="true"></i>Settings</a>
+            <?php $usersActive = $currentSection === 'users'; ?><a href="<?= BASE_URL ?>/users/index.php" class="mobile-nav-link<?= $usersActive ? ' active' : '' ?>" <?= $usersActive ? 'aria-current="page"' : '' ?>><i data-lucide="users" aria-hidden="true"></i>Users</a>
+            <?php $auditActive = $currentSection === 'audit'; ?><a href="<?= BASE_URL ?>/audit/index.php" class="mobile-nav-link<?= $auditActive ? ' active' : '' ?>" <?= $auditActive ? 'aria-current="page"' : '' ?>><i data-lucide="scroll-text" aria-hidden="true"></i>Audit Logs</a>
+        <?php endif; ?>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

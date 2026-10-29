@@ -141,6 +141,62 @@ if (confirmationModalElement && confirmationModalMessage && confirmationModalSub
   confirmationModalElement.addEventListener('close', () => { confirmedAction = null; });
 }
 
+document.querySelectorAll('[data-select-all]').forEach((selectAll) => {
+  const group = selectAll.dataset.selectAll;
+  const items = () => document.querySelectorAll(`[data-select-item="${group}"]`);
+  selectAll.addEventListener('change', () => {
+    items().forEach((item) => { item.checked = selectAll.checked; });
+  });
+  items().forEach((item) => {
+    item.addEventListener('change', () => {
+      const currentItems = [...items()];
+      selectAll.checked = currentItems.length > 0 && currentItems.every((entry) => entry.checked);
+      selectAll.indeterminate = currentItems.some((entry) => entry.checked) && !selectAll.checked;
+    });
+  });
+});
+
+const auditChangeModal = document.getElementById('audit-change-modal');
+const auditChangeAction = document.getElementById('audit-change-action');
+const auditChangeBefore = document.getElementById('audit-change-before');
+const auditChangeAfter = document.getElementById('audit-change-after');
+const auditChangeClose = document.getElementById('audit-change-close');
+if (auditChangeModal && auditChangeAction && auditChangeBefore && auditChangeAfter && auditChangeClose) {
+  const renderAuditValue = (container, value) => {
+    container.replaceChildren();
+    const entries = String(value || 'Not available').split(';').map((entry) => entry.trim()).filter(Boolean);
+    entries.forEach((entry) => {
+      const separator = entry.indexOf(':');
+      const row = document.createElement('div');
+      row.className = 'audit-change-row';
+      if (separator > 0) {
+        const label = document.createElement('span');
+        label.textContent = entry.slice(0, separator).trim();
+        const detail = document.createElement('strong');
+        detail.textContent = entry.slice(separator + 1).trim();
+        row.append(label, detail);
+      } else {
+        row.textContent = entry;
+      }
+      container.appendChild(row);
+    });
+  };
+  const closeAuditChange = () => auditChangeModal.close();
+  document.querySelectorAll('[data-change-dialog]').forEach((trigger) => {
+    trigger.addEventListener('click', () => {
+      auditChangeAction.textContent = trigger.dataset.changeAction || 'Record change';
+      renderAuditValue(auditChangeBefore, trigger.dataset.changeBefore);
+      renderAuditValue(auditChangeAfter, trigger.dataset.changeAfter);
+      auditChangeModal.showModal();
+    });
+  });
+  auditChangeClose.addEventListener('click', closeAuditChange);
+  auditChangeModal.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeAuditChange();
+  });
+}
+
 const popupTimers = new WeakMap();
 const setPopupState = (popover, toggle, open) => {
   const timer = popupTimers.get(popover);
@@ -349,6 +405,7 @@ function bindFilterSelects() {
       const option = event.target.closest('[data-filter-option]');
       if (!option) return;
       input.value = option.dataset.filterOption || '';
+      input.dispatchEvent(new Event('change', { bubbles: true }));
       toggle.firstChild.textContent = option.textContent;
       menu.querySelectorAll('[data-filter-option]').forEach((item) => item.setAttribute('aria-selected', String(item === option)));
       close();
@@ -544,9 +601,75 @@ function bindAjaxFilters() {
   });
 }
 
+function bindAuditFilter() {
+  const form = document.querySelector('[data-audit-filter]');
+  const target = document.querySelector('#audit-results');
+  if (!form || !target || form.dataset.bound) return;
+  form.dataset.bound = 'true';
+  const search = form.querySelector('input[name="search"]');
+  const staffToggle = document.querySelector('[data-audit-staff-toggle]');
+  let request;
+  let timer;
+  const buildUrl = () => {
+    const url = new URL(form.action, window.location.href);
+    new FormData(form).forEach((value, key) => {
+      if (value) url.searchParams.set(key, value);
+      else url.searchParams.delete(key);
+    });
+    return url;
+  };
+  const update = (url) => {
+    if (request) request.abort();
+    request = new AbortController();
+    target.setAttribute('aria-busy', 'true');
+    target.classList.add('is-updating');
+    form.classList.add('is-loading');
+    fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }, signal: request.signal })
+      .then((response) => {
+        if (!response.ok) throw new Error(`Audit filter request failed (${response.status})`);
+        return response.text();
+      })
+      .then((html) => {
+        const parsed = new DOMParser().parseFromString(html, 'text/html');
+        const replacement = parsed.querySelector('#audit-results-fragment');
+        if (!replacement) throw new Error('Filtered audit results were not returned.');
+        target.replaceChildren(...replacement.childNodes);
+        window.history.replaceState({}, '', url.toString());
+        if (window.lucide) window.lucide.createIcons();
+      })
+      .catch((error) => { if (error.name !== 'AbortError') console.error(error); })
+      .finally(() => {
+        form.classList.remove('is-loading');
+        target.setAttribute('aria-busy', 'false');
+      });
+  };
+  const apply = () => {
+    window.clearTimeout(timer);
+    update(buildUrl());
+  };
+  if (search) {
+    search.addEventListener('input', () => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(apply, 300);
+    });
+  }
+  form.addEventListener('filterchange', apply);
+  if (staffToggle) {
+    staffToggle.addEventListener('click', (event) => {
+      event.preventDefault();
+      const url = buildUrl();
+      url.searchParams.set('staff_only', url.searchParams.get('staff_only') === '1' ? '0' : '1');
+      update(url);
+      staffToggle.classList.toggle('active');
+      staffToggle.lastChild.textContent = url.searchParams.get('staff_only') === '1' ? 'Staff only' : 'All users';
+    });
+  }
+}
+
 bindFilterSelects();
 bindPigFilter();
 bindAjaxFilters();
+bindAuditFilter();
 
 document.querySelectorAll('button, .btn, .icon-button, .sidebar-nav a, .mobile-nav-link').forEach((element) => {
   element.addEventListener('pointerdown', () => element.classList.add('is-pressed'));

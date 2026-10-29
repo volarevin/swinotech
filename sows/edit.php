@@ -22,6 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $statement = $pdo->prepare('UPDATE sow_records SET mating_date = :mating_date, expected_farrowing_date = DATE_ADD(:expected_date, INTERVAL 114 DAY) WHERE sow_record_id = :id');
     $statement->execute(['mating_date' => $matingDate, 'expected_date' => $matingDate, 'id' => $id]);
+    require __DIR__ . '/../includes/audit.php';
+    $expectedDate = (new DateTimeImmutable($matingDate))->modify('+114 days')->format('Y-m-d');
+    audit_log($pdo, "Updated sow record #{$id} for {$record['tag_number']}", "Mating: {$record['mating_date']}; Expected: {$record['expected_farrowing_date']}", "Mating: {$matingDate}; Expected: {$expectedDate}");
     flash('success', 'Gestation dates updated.');
     redirect('sows/index.php');
 }

@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
+            require __DIR__ . '/includes/audit.php';
+            audit_log($pdo, 'Logged in');
             header('Location: /SwinoTech/dashboard.php');
             exit;
         } else {

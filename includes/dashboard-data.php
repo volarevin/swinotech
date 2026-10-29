@@ -8,7 +8,6 @@ function dashboard_profile(PDO $pdo): array
         farm_name VARCHAR(150) NOT NULL,
         owner_name VARCHAR(150) NOT NULL,
         location VARCHAR(255) NOT NULL,
-        currency CHAR(3) NOT NULL DEFAULT 'PHP',
         heat_threshold DECIMAL(5,2) NOT NULL DEFAULT 32,
         due_soon_days TINYINT UNSIGNED NOT NULL DEFAULT 7,
         PRIMARY KEY (profile_id)
@@ -16,12 +15,12 @@ function dashboard_profile(PDO $pdo): array
     $profile = $pdo->query('SELECT * FROM farm_profile WHERE profile_id = 1')->fetch();
     return $profile ?: [
         'farm_name' => 'Villa Verde Piggery', 'owner_name' => 'Maria Villanueva',
-        'location' => 'Batangas, Philippines', 'currency' => 'PHP',
+        'location' => 'Batangas, Philippines',
         'heat_threshold' => 32, 'due_soon_days' => 7,
     ];
 }
 
-function dashboard_notifications(PDO $pdo, array $profile): array
+function dashboard_notifications(PDO $pdo, array $profile, string $role = 'admin'): array
 {
     $days = max(1, (int) $profile['due_soon_days']);
     $notifications = [];
@@ -53,9 +52,11 @@ function dashboard_notifications(PDO $pdo, array $profile): array
     if ($reading && strtotime((string) $reading['recorded_at']) < time() - 7200) {
         $notifications[] = ['id' => 'stale-sensor', 'tone' => 'warning', 'icon' => 'wifi-off', 'title' => 'ESP32 has no new readings', 'meta' => 'Last reading ' . date('M d, H:i', strtotime($reading['recorded_at'])), 'href' => 'monitoring/index.php'];
     }
-    $sale = $pdo->query("SELECT sale_id, buyer_name, total_amount, sale_date FROM sales ORDER BY sale_id DESC LIMIT 1")->fetch();
-    if ($sale) {
-        $notifications[] = ['id' => 'sale-' . $sale['sale_id'], 'tone' => 'success', 'icon' => 'receipt-text', 'title' => 'Sale #' . sale_reference((int) $sale['sale_id']) . ' recorded', 'meta' => $sale['buyer_name'] . ' · ₱' . number_format((float) $sale['total_amount'], 2), 'href' => 'sales/view.php?id=' . (int) $sale['sale_id']];
+    if ($role === 'admin') {
+        $sale = $pdo->query("SELECT sale_id, buyer_name, total_amount, sale_date FROM sales ORDER BY sale_id DESC LIMIT 1")->fetch();
+        if ($sale) {
+            $notifications[] = ['id' => 'sale-' . $sale['sale_id'], 'tone' => 'success', 'icon' => 'receipt-text', 'title' => 'Sale #' . sale_reference((int) $sale['sale_id']) . ' recorded', 'meta' => $sale['buyer_name'] . ' · ₱' . number_format((float) $sale['total_amount'], 2), 'href' => 'sales/view.php?id=' . (int) $sale['sale_id']];
+        }
     }
     return $notifications;
 }

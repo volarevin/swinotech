@@ -46,6 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $finish = $pdo->prepare('UPDATE sales SET total_amount = :total WHERE sale_id = :sale');
             $finish->execute(['total' => $total, 'sale' => $saleId]);
             $pdo->commit();
+            require __DIR__ . '/../includes/audit.php';
+            audit_log($pdo, "Created sale #{$saleId} to buyer {$buyer} for ₱{$total}");
             flash('success', 'Whole-pig sale recorded and pigs marked sold.');
             redirect('sales/view.php?id=' . $saleId);
         } catch (Throwable $exception) {
@@ -65,25 +67,30 @@ require __DIR__ . '/../includes/header.php';
 <div class="card"><form method="post">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <div class="row g-3"><div class="col-md-6"><label class="form-label">Buyer name<input class="form-control" name="buyer_name" required value="<?= e($_POST['buyer_name'] ?? '') ?>"></label></div><div class="col-md-6"><label class="form-label">Sale date<input class="form-control" type="date" name="sale_date" value="<?= e($_POST['sale_date'] ?? date('Y-m-d')) ?>" required></label></div></div>
-    <div id="sale-lines" class="mt-4"><div class="row g-2 sale-line mb-2"><div class="col-md-5"><label class="visually-hidden">Pig</label><select class="form-select pig-select" name="pig_id[]" required><option value="">Select pig</option><?php foreach ($pigs as $pig): ?><option value="<?= (int) $pig['pig_id'] ?>" data-weight="<?= e($pig['weight']) ?>"><?= e($pig['tag_number']) ?> · <?= e($pig['weight']) ?> kg</option><?php endforeach; ?></select></div><div class="col-md-3"><label class="visually-hidden">Recorded weight</label><div class="input-group"><input class="form-control recorded-weight" type="number" readonly placeholder="Recorded weight"><span class="input-group-text">kg</span></div></div><div class="col-md-3"><label class="visually-hidden">Price per kg</label><div class="input-group"><span class="input-group-text">₱</span><input class="form-control" type="number" step=".01" min=".01" name="price_per_kg[]" placeholder="Price / kg" required></div></div><div class="col-md-1"><button type="button" class="btn btn-light remove-line" aria-label="Remove pig">×</button></div></div></div>
+    <div id="sale-lines" class="mt-4"><div class="row g-2 sale-line mb-2"><div class="col-md-5"><label class="visually-hidden">Pig</label><div class="filter-select compact-form-select pig-select" data-filter-select><input type="hidden" name="pig_id[]" value=""><button class="filter-select-toggle" type="button" aria-haspopup="listbox" aria-expanded="false" data-filter-select-toggle>Select pig<i data-lucide="chevron-down" aria-hidden="true"></i></button><div class="filter-select-menu" role="listbox" hidden><button type="button" role="option" aria-selected="true" data-filter-option="" data-weight="">Select pig</button><?php foreach ($pigs as $pig): ?><button type="button" role="option" aria-selected="false" data-filter-option="<?= (int) $pig['pig_id'] ?>" data-weight="<?= e($pig['weight']) ?>"><?= e($pig['tag_number']) ?> · <?= e($pig['weight']) ?> kg</button><?php endforeach; ?></div></div></div><div class="col-md-3"><label class="visually-hidden">Recorded weight</label><div class="input-group"><input class="form-control recorded-weight" type="number" readonly placeholder="Recorded weight"><span class="input-group-text">kg</span></div></div><div class="col-md-3"><label class="visually-hidden">Price per kg</label><div class="input-group"><span class="input-group-text">₱</span><input class="form-control" type="number" step=".01" min=".01" name="price_per_kg[]" placeholder="Price / kg" required></div></div><div class="col-md-1"><button type="button" class="btn btn-light remove-line" aria-label="Remove pig">×</button></div></div></div>
     <button type="button" class="btn btn-outline-secondary btn-sm" id="add-line">+ Add pig</button><div class="mt-4"><button class="btn btn-danger primary-action" type="submit">Record sale</button></div>
 </form></div>
 <script>
 (() => {
     const lines = document.getElementById('sale-lines');
     const syncWeight = (line) => {
-        const option = line.querySelector('.pig-select').selectedOptions[0];
+        const selected = line.querySelector('.pig-select input[type="hidden"]').value;
+        const option = line.querySelector(`[data-filter-option="${selected}"]`);
         line.querySelector('.recorded-weight').value = option?.dataset.weight || '';
     };
-    const bind = (line) => line.querySelector('.pig-select').addEventListener('change', () => syncWeight(line));
+    const bind = (line) => line.querySelector('.pig-select input[type="hidden"]').addEventListener('change', () => syncWeight(line));
     bind(lines.querySelector('.sale-line'));
     document.getElementById('add-line').addEventListener('click', () => {
         const line = lines.querySelector('.sale-line').cloneNode(true);
-        line.querySelector('.pig-select').selectedIndex = 0;
+        line.querySelector('.pig-select input[type="hidden"]').value = '';
+        line.querySelector('.filter-select-toggle').firstChild.textContent = 'Select pig';
+        line.querySelectorAll('[data-filter-option]').forEach((option, index) => option.setAttribute('aria-selected', index === 0 ? 'true' : 'false'));
         line.querySelector('.recorded-weight').value = '';
         line.querySelector('input[name="price_per_kg[]"]').value = '';
+        line.querySelectorAll('[data-filter-select]').forEach((select) => { delete select.dataset.bound; });
         lines.appendChild(line);
         bind(line);
+        bindFilterSelects();
     });
     document.addEventListener('click', (event) => {
         if (event.target.classList.contains('remove-line') && document.querySelectorAll('.sale-line').length > 1) {

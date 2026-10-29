@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3306
--- Generation Time: Oct 28, 2026 at 10:50 AM
+-- Generation Time: Oct 29, 2026 at 06:30 AM
 -- Server version: 8.4.3
 -- PHP Version: 8.3.30
 
@@ -38,7 +38,7 @@ CREATE TABLE `device_settings` (
 --
 
 INSERT INTO `device_settings` (`setting_id`, `device_name`, `device_token`) VALUES
-(1, 'ESP32', 'f87df2ad6070331a9aa5795402b9c36330a3801c7f331bb1');
+(1, 'ESP32', '63449ccb6d3d1cab85ca66ff2c2f64634777ff7db64503e4');
 
 -- --------------------------------------------------------
 
@@ -51,7 +51,6 @@ CREATE TABLE `farm_profile` (
   `farm_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `owner_name` varchar(150) COLLATE utf8mb4_unicode_ci NOT NULL,
   `location` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `currency` char(3) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'PHP',
   `heat_threshold` decimal(5,2) NOT NULL DEFAULT '32.00',
   `due_soon_days` tinyint UNSIGNED NOT NULL DEFAULT '7'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -60,8 +59,8 @@ CREATE TABLE `farm_profile` (
 -- Dumping data for table `farm_profile`
 --
 
-INSERT INTO `farm_profile` (`profile_id`, `farm_name`, `owner_name`, `location`, `currency`, `heat_threshold`, `due_soon_days`) VALUES
-(1, 'Banilad Piggery', 'Bambi Batumbakalhahahaha', 'Batangas, Philippines', 'PHP', 32.00, 7);
+INSERT INTO `farm_profile` (`profile_id`, `farm_name`, `owner_name`, `location`, `heat_threshold`, `due_soon_days`) VALUES
+(1, 'Banilad Piggery', 'Bambi Batumbakalhahahaha', 'Batangas, Philippines', 32.00, 7);
 
 -- --------------------------------------------------------
 
@@ -87,7 +86,7 @@ INSERT INTO `pigs` (`pig_id`, `tag_number`, `category`, `weight`, `pen_number`, 
 (101, 'B-001', 'boar', 184.00, 'Pen 1', 'active', '2026-06-03'),
 (102, 'B-002', 'boar', 195.00, 'Pen 2', 'sold', '2026-06-04'),
 (103, 'B-003', 'boar', 206.00, 'Pen 3', 'active', '2026-06-05'),
-(104, 'F-001', 'fattener', 96.00, 'Pen 4', 'active', '2026-06-06'),
+(104, 'F-001', 'fattener', 96.00, 'Pen 4', 'sold', '2026-06-06'),
 (105, 'F-002', 'fattener', 99.00, 'Pen 5', 'active', '2026-06-07'),
 (106, 'I-001', 'sow', 18.00, 'Pen 6', 'active', '2026-06-08'),
 (107, 'I-002', 'sow', 21.00, 'Pen 7', 'active', '2026-06-09'),
@@ -114,7 +113,8 @@ INSERT INTO `pigs` (`pig_id`, `tag_number`, `category`, `weight`, `pen_number`, 
 (128, 'S-007', 'sow', 146.00, 'Pen 13', 'active', '2026-06-30'),
 (129, 'S-008', 'sow', 148.00, 'Pen 1', 'active', '2026-07-01'),
 (130, 'S-009', 'fattener', 150.00, 'Pen 13', 'dead', '2026-07-02'),
-(131, 'S-010', 'sow', 178.00, 'Pen 1', 'active', '2026-10-28');
+(131, 'S-010', 'sow', 178.00, 'Pen 1', 'active', '2026-10-28'),
+(132, 'S-011', 'sow', 195.00, 'Pen 1', 'active', '2026-10-28');
 
 -- --------------------------------------------------------
 
@@ -135,7 +135,8 @@ CREATE TABLE `sales` (
 
 INSERT INTO `sales` (`sale_id`, `buyer_name`, `sale_date`, `total_amount`) VALUES
 (1031, 'Northgate Meat Traders', '2026-10-26', 35911.00),
-(1032, 'Rene Baterbonia', '2026-10-28', 23400.00);
+(1032, 'Rene Baterbonia', '2026-10-28', 23400.00),
+(1033, 'Rene Baterbonia', '2026-10-28', 11520.00);
 
 -- --------------------------------------------------------
 
@@ -156,7 +157,8 @@ CREATE TABLE `sale_items` (
 --
 
 INSERT INTO `sale_items` (`sale_item_id`, `sale_id`, `pig_id`, `sold_weight`, `price_per_kg`) VALUES
-(1, 1032, 102, 195.00, 120.00);
+(1, 1032, 102, 195.00, 120.00),
+(2, 1033, 104, 96.00, 120.00);
 
 -- --------------------------------------------------------
 
@@ -199,10 +201,14 @@ CREATE TABLE `sow_records` (
 --
 
 INSERT INTO `sow_records` (`sow_record_id`, `pig_id`, `mating_date`, `expected_farrowing_date`, `status`, `piglets_born`) VALUES
-(901, 101, '2026-06-20', '2026-10-12', 'farrowed', 0),
+(901, 101, '2026-06-20', '2026-10-12', 'failed', 0),
 (902, 117, '2026-07-08', '2026-10-30', 'farrowed', 8),
-(903, 103, '2026-07-06', '2026-10-28', 'farrowed', 0),
-(906, 123, '2026-07-08', '2026-10-30', 'pregnant', 0);
+(903, 103, '2026-07-06', '2026-10-28', 'failed', 0),
+(906, 123, '2026-07-08', '2026-10-30', 'farrowed', 7),
+(907, 107, '2026-07-08', '2026-10-30', 'farrowed', 6),
+(908, 120, '2026-07-08', '2026-10-30', 'pregnant', 0),
+(909, 128, '2026-09-11', '2027-01-03', 'pregnant', 0),
+(910, 106, '2026-08-13', '2026-12-05', 'farrowed', 0);
 
 -- --------------------------------------------------------
 
@@ -214,7 +220,8 @@ CREATE TABLE `users` (
   `user_id` int UNSIGNED NOT NULL,
   `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `role` enum('admin','staff') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'staff'
+  `role` enum('admin','staff') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'staff',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
@@ -222,7 +229,26 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`user_id`, `username`, `password`, `role`) VALUES
-(1, 'admin67', '$2y$10$PTMySUDeOqIVH8b2bBXBj.sh0Qjr8zyzfGLg3eonE9vgyufOzUSJG', 'admin');
+(1, 'admin67', '$2y$10$PTMySUDeOqIVH8b2bBXBj.sh0Qjr8zyzfGLg3eonE9vgyufOzUSJG', 'admin'),
+(2, 'staff', '$2y$10$VG2RcrTFsnKMrpLoLI.LrelIAXultM5wlgG0c0fcJl54iBUXhmu4G', 'staff');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `audit_logs`
+--
+
+CREATE TABLE `audit_logs` (
+  `log_id` int UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` int UNSIGNED NOT NULL,
+  `action_description` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `before_value` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `after_value` text COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`log_id`),
+  KEY `idx_audit_user_id` (`user_id`),
+  KEY `idx_audit_created_at` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
 -- Indexes for dumped tables
@@ -289,19 +315,19 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `pigs`
 --
 ALTER TABLE `pigs`
-  MODIFY `pig_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=132;
+  MODIFY `pig_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=133;
 
 --
 -- AUTO_INCREMENT for table `sales`
 --
 ALTER TABLE `sales`
-  MODIFY `sale_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1033;
+  MODIFY `sale_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1034;
 
 --
 -- AUTO_INCREMENT for table `sale_items`
 --
 ALTER TABLE `sale_items`
-  MODIFY `sale_item_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `sale_item_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `sensor_logs`
@@ -313,13 +339,13 @@ ALTER TABLE `sensor_logs`
 -- AUTO_INCREMENT for table `sow_records`
 --
 ALTER TABLE `sow_records`
-  MODIFY `sow_record_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=907;
+  MODIFY `sow_record_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=911;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `user_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `user_id` int UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- Constraints for dumped tables
