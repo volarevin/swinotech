@@ -80,13 +80,6 @@ if (isset($pdo)) {
                 <a class="<?= $auditActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/audit/index.php" <?= $auditActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="scroll-text" aria-hidden="true"></i><span>Audit Logs</span></a>
             <?php endif; ?>
         </nav>
-        <div class="sidebar-user">
-            <div class="sidebar-user-identity">
-                <div class="avatar"><?= e(strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1))) ?></div>
-                <div class="text-truncate"><strong><?= e($_SESSION['username'] ?? 'User') ?></strong><small><i data-lucide="shield-check" aria-hidden="true"></i><?= e(ucfirst($role)) ?></small></div>
-            </div>
-            <a href="<?= BASE_URL ?>/logout.php" class="logout-link"><i data-lucide="log-out" aria-hidden="true"></i><span>Logout</span></a>
-        </div>
     </aside>
     <div class="app-main">
         <header class="topbar">
@@ -105,7 +98,7 @@ if (isset($pdo)) {
             </div>
             <div class="alerts-control"><button class="icon-button" type="button" aria-label="Open alerts" aria-expanded="false" data-alert-toggle><i data-lucide="bell" aria-hidden="true"></i><?php if ($headerAlerts): ?><span class="alert-count"><?= count($headerAlerts) ?></span><?php endif; ?></button><div class="alerts-dropdown" data-alert-menu hidden><div class="alerts-dropdown-head"><strong>Alerts</strong><span><?= count($headerAlerts) ?> active</span></div><?php if (!$headerAlerts): ?><p class="empty-state">Everything is under control.</p><?php else: foreach (array_slice($headerAlerts, 0, 5) as $alert): ?><a href="<?= BASE_URL . '/' . e($alert['href']) ?>" class="alert-menu-item"><i data-lucide="<?= e($alert['icon']) ?>" aria-hidden="true"></i><span><strong><?= e($alert['title']) ?></strong><small><?= e($alert['meta']) ?></small></span></a><?php endforeach; endif; ?></div></div>
             <button class="theme-toggle icon-button" type="button" aria-label="Toggle dark mode" aria-pressed="false" data-theme-toggle><i data-lucide="moon" aria-hidden="true"></i><span class="visually-hidden" data-theme-label>Enable dark mode</span></button>
-            <a class="icon-button" href="<?= BASE_URL ?>/logout.php" aria-label="Logout"><i data-lucide="log-out" aria-hidden="true"></i></a>
+            <div class="account-control"><button class="icon-button account-toggle" type="button" aria-label="Open user menu" aria-expanded="false" data-account-toggle><i data-lucide="user-round" aria-hidden="true"></i></button><div class="account-dropdown" data-account-menu hidden><div class="account-identity"><span class="avatar"><?= e(strtoupper(substr($_SESSION['username'] ?? 'U', 0, 1))) ?></span><span><strong><?= e($_SESSION['username'] ?? 'User') ?></strong><small><i data-lucide="shield-check" aria-hidden="true"></i><?= e(ucfirst($role)) ?></small></span></div><a href="<?= BASE_URL ?>/logout.php" class="logout-link"><i data-lucide="log-out" aria-hidden="true"></i><span>Logout</span></a></div></div>
         </header>
         <main class="content">
             <?php if ($flashMessage): ?><div class="alert alert-<?= $flashMessage['type'] === 'error' ? 'danger' : 'success' ?>"><?= e($flashMessage['message']) ?></div><?php endif; ?>

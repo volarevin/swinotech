@@ -31,25 +31,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to sow tracker" title="Back to sow tracker"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Breeding operations</p><h2>Edit <?= e($record['tag_number']) ?></h2><p>Update the mating date or record the outcome of this breeding cycle.</p></div></div>
-<div class="card mb-3">
+<div class="card form-card mb-3">
     <h3 class="section-title">Mating details</h3>
-    <form method="post" class="row g-3">
+    <form method="post" class="form-stack">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="sow_record_id" value="<?= $id ?>">
-        <div class="col-md-6"><label class="form-label">Mating date<input class="form-control" type="date" name="mating_date" value="<?= e($record['mating_date']) ?>" required></label></div>
-        <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
+        <div class="form-field"><label class="form-label">Mating date<input class="form-control" type="date" name="mating_date" value="<?= e($record['mating_date']) ?>" required></label></div>
+        <div class="form-actions"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
     </form>
 </div>
 <?php if ($record['status'] === 'pregnant'): ?>
-<div class="card">
+<div class="card form-card">
     <h3 class="section-title">Record breeding outcome</h3>
     <p class="section-note mb-3">Enter the total piglets born before marking this sow as farrowed. Failed cycles do not create piglet records.</p>
-    <div class="d-flex flex-wrap align-items-end gap-3">
-        <form method="post" action="update-status.php" class="d-flex flex-wrap align-items-end gap-2">
+    <div class="form-stack">
+        <form method="post" action="update-status.php" class="form-actions">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
             <input type="hidden" name="sow_record_id" value="<?= $id ?>">
             <input type="hidden" name="new_status" value="farrowed">
-            <div><label class="form-label" for="piglets-born">Piglets born</label><input class="form-control" id="piglets-born" type="number" name="piglets_born" min="1" step="1" required value=""></div>
+            <div class="form-field"><label class="form-label" for="piglets-born">Piglets born</label><input class="form-control" id="piglets-born" type="number" name="piglets_born" min="1" step="1" required value=""></div>
             <button class="btn btn-success primary-action" id="farrowed-button" type="submit" disabled>Farrowed</button>
         </form>
         <form method="post" action="update-status.php">

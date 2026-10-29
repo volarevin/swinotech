@@ -44,11 +44,11 @@ require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to users"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Administration</p><h2>Add user</h2></div></div>
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= e($error) ?></div><?php endif; ?>
-<div class="card"><form method="post" class="row g-3">
+<div class="card form-card"><form method="post" class="form-stack">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-    <div class="col-md-6"><label class="form-label">Username<input class="form-control" name="username" value="<?= e($username) ?>" required autocomplete="username"></label></div>
-    <div class="col-md-6"><label class="form-label">Password<input class="form-control" type="password" name="password" required autocomplete="new-password"></label></div>
-    <div class="col-md-6"><label class="form-label">Confirm password<input class="form-control" type="password" name="confirm_password" required autocomplete="new-password"></label></div>
-    <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Create user</button></div>
+    <div class="form-field"><label class="form-label">Username<input class="form-control" name="username" value="<?= e($username) ?>" required autocomplete="username"></label></div>
+    <div class="form-field"><label class="form-label">Password<input class="form-control" type="password" name="password" required autocomplete="new-password"></label></div>
+    <div class="form-field"><label class="form-label">Confirm password<input class="form-control" type="password" name="confirm_password" required autocomplete="new-password"></label></div>
+    <div class="form-actions"><button class="btn btn-danger primary-action" type="submit">Create user</button></div>
 </form></div>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

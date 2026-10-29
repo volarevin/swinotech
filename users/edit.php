@@ -64,11 +64,11 @@ require __DIR__ . '/../includes/header.php';
 ?>
 <div class="page-heading"><div><p class="eyebrow"><a class="back-button" href="index.php" aria-label="Back to users"><i data-lucide="arrow-left" aria-hidden="true"></i></a>Administration</p><h2>Edit user</h2></div></div>
 <?php if ($error): ?><div class="alert alert-danger" role="alert"><?= e($error) ?></div><?php endif; ?>
-<div class="card"><form method="post" class="row g-3">
+<div class="card form-card"><form method="post" class="form-stack">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><input type="hidden" name="user_id" value="<?= $id ?>">
-    <div class="col-md-6"><label class="form-label">Username<input class="form-control" name="username" value="<?= e($username) ?>" required autocomplete="username"></label></div>
-    <div class="col-md-6"><label class="form-label">Role<select class="form-select" name="role"><option value="staff" <?= $role === 'staff' ? 'selected' : '' ?>>Staff</option><option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option></select></label></div>
-    <div class="col-md-6"><label class="form-label">New password <span class="text-muted fw-normal">(optional)</span><input class="form-control" type="password" name="password" placeholder="Leave blank to keep current" autocomplete="new-password"></label></div>
-    <div class="col-12"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
+    <div class="form-field"><label class="form-label">Username<input class="form-control" name="username" value="<?= e($username) ?>" required autocomplete="username"></label></div>
+    <div class="form-field"><label class="form-label">Role<select class="form-select" name="role"><option value="staff" <?= $role === 'staff' ? 'selected' : '' ?>>Staff</option><option value="admin" <?= $role === 'admin' ? 'selected' : '' ?>>Admin</option></select></label></div>
+    <div class="form-field"><label class="form-label">New password <span class="text-muted fw-normal">(optional)</span><input class="form-control" type="password" name="password" placeholder="Leave blank to keep current" autocomplete="new-password"></label></div>
+    <div class="form-actions"><button class="btn btn-danger primary-action" type="submit">Save changes</button></div>
 </form></div>
 <?php require __DIR__ . '/../includes/footer.php'; ?>

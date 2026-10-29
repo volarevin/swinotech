@@ -251,6 +251,12 @@ const closeCalendarPopovers = () => {
     if (toggle) setPopupState(popover, toggle, false);
   });
 };
+const closeAccountMenus = () => {
+  document.querySelectorAll('[data-account-menu]').forEach((menu) => {
+    const toggle = menu.parentElement.querySelector('[data-account-toggle]');
+    if (toggle) setPopupState(menu, toggle, false);
+  });
+};
 
 document.querySelectorAll('[data-alert-toggle]').forEach((toggle) => {
   const menu = toggle.parentElement.querySelector('[data-alert-menu]');
@@ -260,6 +266,21 @@ document.querySelectorAll('[data-alert-toggle]').forEach((toggle) => {
     const open = menu.hasAttribute('hidden');
     if (open) closeCalendarPopovers();
     setPopupState(menu, toggle, open);
+  });
+
+  document.querySelectorAll('[data-account-toggle]').forEach((toggle) => {
+    const menu = toggle.parentElement.querySelector('[data-account-menu]');
+    if (!menu) return;
+    toggle.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const open = menu.hasAttribute('hidden');
+      if (open) {
+        closeAlertMenus();
+        closeCalendarPopovers();
+      }
+      setPopupState(menu, toggle, open);
+    });
+    menu.addEventListener('click', (event) => event.stopPropagation());
   });
   menu.addEventListener('click', (event) => event.stopPropagation());
 });
@@ -379,6 +400,7 @@ document.querySelectorAll('[data-calendar]').forEach((calendar) => {
 document.addEventListener('click', () => {
   closeAlertMenus();
   closeCalendarPopovers();
+  closeAccountMenus();
   document.querySelectorAll('[data-filter-select] .filter-select-menu.is-open').forEach((menu) => {
     menu.classList.remove('is-open');
     window.setTimeout(() => menu.setAttribute('hidden', ''), 180);
@@ -389,6 +411,7 @@ document.addEventListener('click', () => {
 document.addEventListener('keydown', (event) => {
   if (event.key !== 'Escape') return;
   closeAlertMenus();
+  closeAccountMenus();
   document.querySelectorAll('[data-calendar-popover]').forEach((popover) => {
     if (!popover.hasAttribute('hidden')) {
       const toggle = popover.parentElement.querySelector('[data-calendar-toggle]');
