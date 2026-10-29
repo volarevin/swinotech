@@ -2,8 +2,14 @@
 declare(strict_types=1);
 
 const BASE_URL = '/SwinoTech';
+const VALID_ROLES = ['admin', 'staff'];
 
 if (session_status() === PHP_SESSION_NONE) {
+    session_set_cookie_params([
+        'httponly' => true,
+        'samesite' => 'Lax',
+        'secure' => !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
+    ]);
     session_start();
 }
 
@@ -26,15 +32,22 @@ function redirect(string $path): never
 
 function require_login(): void
 {
-    if (empty($_SESSION['user_id'])) {
+    if (!is_authenticated()) {
+        $_SESSION = [];
         redirect('login.php');
     }
+}
+
+function is_authenticated(): bool
+{
+    return !empty($_SESSION['user_id'])
+        && in_array((string) ($_SESSION['role'] ?? ''), VALID_ROLES, true);
 }
 
 function require_role(string $role): void
 {
     require_login();
-    if (($_SESSION['role'] ?? '') !== $role) {
+    if (!in_array($role, VALID_ROLES, true) || ($_SESSION['role'] ?? '') !== $role) {
         flash('error', 'You do not have permission to access that page.');
         redirect('dashboard.php');
     }

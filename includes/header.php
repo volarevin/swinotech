@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/auth.php';
+require_login();
 $pageTitle = $pageTitle ?? 'SwinoTech';
 $flashMessage = take_flash();
 $role = $_SESSION['role'] ?? 'staff';
@@ -34,28 +35,34 @@ if (isset($pdo)) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     <script>(function(){try{var t=localStorage.getItem('swinotech-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else if(window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';}catch(e){}})();</script>
+    <script>(function(){try{if(localStorage.getItem('swinotech-sidebar-collapsed')==='true')document.documentElement.classList.add('sidebar-collapsed');}catch(e){}})();</script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= BASE_URL ?>/assets/css/style.css" rel="stylesheet">
+    <link href="<?= BASE_URL ?>/assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
 <div class="app-shell">
     <aside class="app-sidebar">
-        <a class="brand" href="<?= BASE_URL ?>/dashboard.php">
-            <span class="brand-mark"><i data-lucide="paw-print" aria-hidden="true"></i></span>
-            <span><strong>Swino<span>Tech</span></strong><small>Piggery Management System</small></span>
-        </a>
+        <div class="sidebar-head">
+            <a class="brand" href="<?= BASE_URL ?>/dashboard.php">
+                <span class="brand-mark"><img src="<?= BASE_URL ?>/icons/logo.png" alt=""></span>
+                <span><strong>Swino<span>Tech</span></strong><small>Piggery Management System</small></span>
+            </a>
+            <button class="sidebar-toggle icon-button" type="button" aria-label="Collapse sidebar" aria-expanded="true" aria-controls="app-sidebar-nav" data-sidebar-toggle>
+                <i data-lucide="panel-left-close" aria-hidden="true"></i>
+            </button>
+        </div>
         <div class="sidebar-label">Farm modules</div>
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" id="app-sidebar-nav">
             <?php foreach ($nav as $item): ?>
                 <?php $active = $item['section'] === 'dashboard' ? $isDashboard : $currentSection === $item['section']; ?>
                 <a class="<?= $active ? 'active' : '' ?>" href="<?= BASE_URL . '/' . $item['href'] ?>" <?= $active ? 'aria-current="page"' : '' ?>>
-                    <i class="nav-icon" data-lucide="<?= e($item['icon']) ?>" aria-hidden="true"></i><?= e($item['label']) ?>
+                    <i class="nav-icon" data-lucide="<?= e($item['icon']) ?>" aria-hidden="true"></i><span><?= e($item['label']) ?></span>
                 </a>
             <?php endforeach; ?>
             <?php if ($role === 'admin'): ?>
                 <?php $settingsActive = $currentSection === 'settings'; ?>
-                <a class="<?= $settingsActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/settings/index.php" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="settings" aria-hidden="true"></i>Settings</a>
+                <a class="<?= $settingsActive ? 'active' : '' ?>" href="<?= BASE_URL ?>/settings/index.php" <?= $settingsActive ? 'aria-current="page"' : '' ?>><i class="nav-icon" data-lucide="settings" aria-hidden="true"></i><span>Settings</span></a>
             <?php endif; ?>
         </nav>
         <div class="sidebar-user">

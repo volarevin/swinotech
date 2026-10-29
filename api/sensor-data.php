@@ -1,5 +1,9 @@
 <?php
 declare(strict_types=1);
+require __DIR__ . '/../includes/auth.php';
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+    require_login();
+}
 require __DIR__ . '/../includes/db.php';
 header('Content-Type: application/json; charset=utf-8');
 $method = $_SERVER['REQUEST_METHOD'];

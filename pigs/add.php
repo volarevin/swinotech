@@ -39,6 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($number !== '' && (!ctype_digit($number) || (int) $number < 1 || (int) $number > 999999)) {
             throw new InvalidArgumentException('Tag number must be a whole number between 1 and 999999.');
         }
+        if ($penNumber === '') {
+            throw new InvalidArgumentException('Pen number is required.');
+        }
         $prefix = $categories[$category];
         $tagNumber = $number === '' ? next_pig_number($pdo, $prefix) : (int) $number;
         $tag = $prefix . '-' . str_pad((string) $tagNumber, 3, '0', STR_PAD_LEFT);
@@ -75,7 +78,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="col-md-6"><label class="form-label">Category<select class="form-select" name="category" id="pig-category" required><?php foreach ($categories as $value => $prefix): ?><option value="<?= e($value) ?>" <?= $category === $value ? 'selected' : '' ?>><?= e(ucfirst($value)) ?> (<?= $prefix ?>)</option><?php endforeach; ?></select></label></div>
     <div class="col-md-6"><label class="form-label">Tag number <span class="text-muted fw-normal">(optional)</span><div class="input-group"><span class="input-group-text" id="tag-prefix">B-</span><input class="form-control" name="tag_number" id="tag-number" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="Auto" value="<?= e($number) ?>"></div><div class="form-text">Example: enter <strong>12</strong> to create <strong id="tag-preview">B-012</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Weight (kg)<input class="form-control" type="number" step=".01" min="0" name="weight" required value="<?= e($_POST['weight'] ?? '') ?>"></label></div>
-    <div class="col-md-6"><label class="form-label">Pen number <span class="text-muted fw-normal">(optional)</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]*" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', $penNumber)) ?>"></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
+    <div class="col-md-6"><label class="form-label">Pen number <span class="text-danger">*</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]+" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', $penNumber)) ?>" required></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Status<select class="form-select" name="status"><option>active</option><option>sold</option><option>dead</option></select></label></div>
     <div class="col-12"><button class="btn btn-danger">Save pig</button> <a class="btn btn-light" href="index.php">Cancel</a></div>
 </form></div>

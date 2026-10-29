@@ -4,6 +4,33 @@ if (window.lucide) {
 
 document.documentElement.classList.add('js');
 
+const sidebarKey = 'swinotech-sidebar-collapsed';
+const sidebar = document.querySelector('.app-sidebar');
+const sidebarToggle = document.querySelector('[data-sidebar-toggle]');
+if (sidebar && sidebarToggle) {
+  const setSidebarCollapsed = (collapsed, persist = false) => {
+    sidebar.classList.toggle('is-collapsed', collapsed);
+    document.documentElement.classList.toggle('sidebar-collapsed', collapsed);
+    sidebarToggle.setAttribute('aria-expanded', String(!collapsed));
+    sidebarToggle.setAttribute('aria-label', collapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    const icon = sidebarToggle.querySelector('[data-lucide], svg');
+    if (icon) {
+      const replacement = document.createElement('i');
+      replacement.setAttribute('data-lucide', collapsed ? 'panel-left-open' : 'panel-left-close');
+      replacement.setAttribute('aria-hidden', 'true');
+      icon.replaceWith(replacement);
+    }
+    if (persist) {
+      try { window.localStorage.setItem(sidebarKey, String(collapsed)); } catch (error) { /* unavailable storage should not block the UI */ }
+    }
+    if (window.lucide) window.lucide.createIcons();
+  };
+  let initiallyCollapsed = false;
+  try { initiallyCollapsed = window.localStorage.getItem(sidebarKey) === 'true'; } catch (error) { /* unavailable storage should not block the UI */ }
+  setSidebarCollapsed(initiallyCollapsed);
+  sidebarToggle.addEventListener('click', () => setSidebarCollapsed(!sidebar.classList.contains('is-collapsed'), true));
+}
+
 document.querySelectorAll('[data-chart-switch]').forEach((toggle) => {
   toggle.addEventListener('click', () => {
     const card = toggle.closest('.card');

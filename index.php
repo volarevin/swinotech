@@ -1,6 +1,4 @@
 <?php
 require __DIR__ . '/includes/auth.php';
-if (empty($_SESSION['user_id'])) {
-    redirect('login.php');
-}
+require_login();
 redirect('dashboard.php');

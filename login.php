@@ -1,8 +1,12 @@
 <?php
-session_start();
+require __DIR__ . '/includes/auth.php';
 require __DIR__ . '/includes/db.php';
 
 $error = '';
+
+if (is_authenticated()) {
+    redirect('dashboard.php');
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
@@ -15,7 +19,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch();
 
-        if ($user && password_verify($password, $user['password'])) {
+        if ($user && in_array((string) $user['role'], VALID_ROLES, true) && password_verify($password, $user['password'])) {
+            session_regenerate_id(true);
             $_SESSION['user_id'] = $user['user_id'];
             $_SESSION['username'] = $user['username'];
             $_SESSION['role'] = $user['role'];
@@ -39,19 +44,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script>(function(){try{var t=localStorage.getItem('swinotech-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;else if(window.matchMedia('(prefers-color-scheme: dark)').matches)document.documentElement.dataset.theme='dark';}catch(e){}})();</script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="<?= htmlspecialchars('/SwinoTech/assets/css/style.css', ENT_QUOTES, 'UTF-8') ?>" rel="stylesheet">
+    <link href="<?= htmlspecialchars('/SwinoTech/assets/css/style.css?v=' . filemtime(__DIR__ . '/assets/css/style.css'), ENT_QUOTES, 'UTF-8') ?>" rel="stylesheet">
 </head>
 <body>
     <main class="login-page">
         <section class="login-brand" aria-label="SwinoTech introduction">
             <div>
                 <a class="brand" href="/SwinoTech/login.php">
-                    <span class="brand-mark"><i data-lucide="paw-print" aria-hidden="true"></i></span>
+                    <span class="brand-mark"><img src="/SwinoTech/icons/logobig.jpg" alt=""></span>
                     <span><strong>Swino<span>Tech</span></strong><small>Piggery Management System</small></span>
                 </a>
-                <p class="eyebrow mt-5 mb-2" style="color:#e4cfcf;">Farm operations, at a glance</p>
+                <p class="login-eyebrow eyebrow mt-5 mb-2">Farm operations, at a glance</p>
                 <h1 class="display-5 mb-3">A healthier herd starts with better visibility.</h1>
-                <p class="mb-0" style="max-width: 430px; color:#e4cfcf;">Manage your herd, breeding records, sales, and barn conditions from one calm, focused workspace.</p>
+                <p class="login-description mb-0">Manage your herd, breeding records, sales, and barn conditions from one calm, focused workspace.</p>
             </div>
         </section>
         <section class="login-form-wrap">

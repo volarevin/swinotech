@@ -32,6 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             throw new InvalidArgumentException('Tag number must be a whole number between 1 and 999999.');
         }
         $penInput = trim((string) ($_POST['pen_number'] ?? ''));
+        if ($penInput === '') {
+            throw new InvalidArgumentException('Pen number is required.');
+        }
         $penDigits = preg_replace('/^pen[\s-]*/i', '', $penInput);
         if ($penInput !== '' && !preg_match('/^\d+$/', (string) $penDigits)) {
             throw new InvalidArgumentException('Pen number must contain digits only, such as 1 or 12.');
@@ -65,7 +68,7 @@ require __DIR__ . '/../includes/header.php';
     <div class="col-md-6"><label class="form-label">Category<select class="form-select" name="category" id="pig-category" required><?php foreach ($categories as $value => $prefix): ?><option value="<?= e($value) ?>" <?= $category === $value ? 'selected' : '' ?>><?= e(ucfirst($value)) ?> (<?= $prefix ?>)</option><?php endforeach; ?></select></label></div>
     <div class="col-md-6"><label class="form-label">Tag number<div class="input-group"><span class="input-group-text" id="tag-prefix"><?= e($categories[$category] ?? 'B') ?>-</span><input class="form-control" name="tag_number" id="tag-number" inputmode="numeric" pattern="[0-9]*" maxlength="6" value="<?= e($tagNumber) ?>" required></div><div class="form-text">The category prefix and numeric suffix stay synchronized.</div></label></div>
     <div class="col-md-6"><label class="form-label">Weight (kg)<input class="form-control" type="number" step=".01" min="0" name="weight" required value="<?= e($pig['weight']) ?>"></label></div>
-    <div class="col-md-6"><label class="form-label">Pen number <span class="text-muted fw-normal">(optional)</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]*" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', (string) ($pig['pen_number'] ?? ''))) ?>"></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
+    <div class="col-md-6"><label class="form-label">Pen number <span class="text-danger">*</span><div class="input-group"><span class="input-group-text">Pen</span><input class="form-control" name="pen_number" id="pen-number" inputmode="numeric" pattern="[0-9]+" placeholder="1" value="<?= e(preg_replace('/^pen[\s-]*/i', '', (string) ($pig['pen_number'] ?? ''))) ?>" required></div><div class="form-text">Enter only the number, for example <strong>1</strong>.</div></label></div>
     <div class="col-md-6"><label class="form-label">Status<select class="form-select" name="status"><?php foreach (['active', 'sold', 'dead'] as $item): ?><option <?= $pig['status'] === $item ? 'selected' : '' ?>><?= $item ?></option><?php endforeach; ?></select></label></div>
     <div class="col-12"><button class="btn btn-danger primary-action">Save changes</button> <a class="btn btn-light" href="index.php">Cancel</a></div>
 </form></div>
