@@ -12,6 +12,13 @@ SwinoTech is a PHP/MySQL piggery management system for tracking pigs, sows, sale
 
    `http://localhost/SwinoTech/login.php`
 
+#Admin Credentials
    user: admin67
-   pass:admin123
+   pass: admin123
+
+#Staff Credentials
+   user: staff67
+   pass: staff
+
+   
 
